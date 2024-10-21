@@ -1,0 +1,50 @@
+The rationale of implementing 'make_parser' independently of make_matcher is to
+directly construct parse trees from grammars, which requires tracking rule applications,
+unlike make_matcher that primarily checks for match viability.
+As 'make_parser' focuses on building a comprehensive parse tree it becomes necessary to 
+have a different approach for handling grammatical structures and rule applications. 
+
+I have utilized a shared grammar traversal technique to avoid duplication. 
+In my implementation, it is clear that both functions share a near identical approach 
+to grammar traversal and make use of recursive strategies to navigate through grammar rules
+and match input fragments. I have made of recursive helper functions that reflect a
+similar line of thinking meaning functions like 'search_paths', 'test_path' for 'make_parser' 
+and 'match_sequence' , 'match_symbol' for 'make_matcher' minimize redundancy in
+the rule evaluation logic. 
+
+Though my implementation passes all the sample tests from the spec, 
+scores a full on the Gradescope autograder and passes my tests for part 6 and 7 
+of the spec, my implementation is not practically robust and can be broken by
+many grammars.
+
+One weakness is with the handling of left recursion. 
+
+There is a potential infinite recursion with left-recursive grammars,
+as my current implementation does not explicitly detect or handle such cases.
+
+Moreover, a limitation in handling complex recursive structures can be revealed by 
+testing my implementation against grammar with mutually recursive rules without a 
+clear base case since it would lead to infinite loops. 
+
+Because of my implementations heavy reliance on recursion and backtracking, 
+the performance might be negatively impacted for very complex grammars or 
+long input strings. This could lead to stack overflow errors or significant 
+delays in parsing.
+
+Also the error reporting is minimal which makes debugging challenging for 
+complex grammars or incorrect inputs.
+
+Here is an example of a case that reflects the weakness mentioned above: 
+A grammar rule like | Expr -> [[N Expr; T "plus"]; [N Term]] 
+can cause infinite recursion by repeatedly applying the rule without consuming
+ any input or reaching a terminal condition.
+
+Another idea of a shortcoming to understand is how a deeply nested expression 
+can cause problems.
+Imagining a hypothetical grammar designed to parse nested arithmetic expressions- 
+we can consider parsing a deeply nested expression like:
+["num"; "+"; "num"; "*"; "("; "num"; "+"; "num"; ")"]
+
+The above expression might not look very long but it requires the parser to evaluate
+multiple paths due to the presence of multiple operations which have different levels
+of precedence and thus different parsing structures within the same length of input.
